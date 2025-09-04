@@ -1,6 +1,5 @@
 //========INCLUDES========//
-#include <common.h>
-#include <threadPool.h>
+#include <threadpool.h>
 
 
 //========FUN DEF=========//
