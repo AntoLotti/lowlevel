@@ -6,9 +6,9 @@
 //========FUN DEF=========//
 static bool creator_pthreads( threadpool_t* src )
 {
-    for (int i = 0; i < MAX_THREADS; i++)
+    for (int i = 0; i < THREADS; i++)
     {
-        if ( pthread_create( &(src->threadsArray[ i ]), NULL, &pthreadpool_assigner, src ) != 0  )
+        if ( pthread_create( &(src->threads[ i ]), NULL, &pthreadpool_assigner, src ) != 0  )
         {
             perror("Error creating the threads");
             return false;
@@ -20,9 +20,9 @@ static bool creator_pthreads( threadpool_t* src )
 
 static bool destructor_pthreads( threadpool_t* src )
 {
-    for (int i = 0; i < MAX_THREADS; i++)
+    for (int i = 0; i < THREADS; i++)
     {
-        if ( pthread_join( src->threadsArray[ i ], NULL ) != 0  )
+        if ( pthread_join( src->threads[ i ], NULL ) != 0  )
         {
             perror("Error joining the threads");
             return false;
@@ -34,9 +34,9 @@ static bool destructor_pthreads( threadpool_t* src )
 
 void threadpool_init( threadpool_t* src )
 {
-    src->numTasks   = 0;        // Initialization of the index
-    src->queue_top  = 0;        // Initialization of the index 
-    src->queue_last = 0;        // Initialization of the index
+    src->queued   = 0;        // Initialization of the index
+    src->queue_front  = 0;        // Initialization of the index 
+    src->queue_back = 0;        // Initialization of the index
     src->stop       = false;    // Initialization of the index 
 
     pthread_mutex_init( &(src->lock), NULL );   //Initialization of the mutex
@@ -51,16 +51,16 @@ void threadpool_add_task( threadpool_t* dst, void* (*fun)( void* arg ), void* ar
     pthread_mutex_lock( &(dst->lock) );
 
     // Find the next position where to put the task (Circular Queues)
-    int nextTaskpos = (dst->queue_last + 1) % MAX_TASKS;
+    int nextTaskpos = (dst->queue_back + 1) % MAX_TASKS;
 
     // Check the length of the queue
-    if ( dst->task_in_queue < MAX_TASKS )
+    if ( dst->queued < MAX_TASKS )
     {   
         // Add the task to the queue 
         dst->task_queue[ nextTaskpos ].arg = arg;
         dst->task_queue[ nextTaskpos ].fn = fun;
-        dst->queue_last = nextTaskpos;
-        dst->task_in_queue++;
+        dst->queue_back = nextTaskpos;
+        dst->queued++;
 
         // Notified  all threads that there is a task in the queue
         pthread_cond_broadcast( &(dst->notify) ); 
@@ -93,7 +93,7 @@ void* threadpool_assigner( void* src )
         pthread_mutex_lock( &(thpool->lock) );
         
         // Check if the Queue is empty, if it's wait untile there are some task
-        while ( thpool->numTasks == 0 && !(thpool->stop) )
+        while ( thpool->queued == 0 && !(thpool->stop) )
         {
             pthread_cond_wait( &(thpool->notify), &(thpool->lock) );
         }
@@ -107,11 +107,11 @@ void* threadpool_assigner( void* src )
         }
         
         // Assigne a task 
-        task_t taskTh = thpool->taskQueue[ thpool->queue_top ];
+        task_t taskTh = thpool->taskQueue[ thpool->queue_front ];
 
         // Move the task in the queue (Circular Queues)
-        thpool->queue_top = (thpool->queue_top + 1) % MAX_TASKS;
-        thpool->numTasks--;
+        thpool->queue_front = (thpool->queue_front + 1) % MAX_TASKS;
+        thpool->queued--;
 
         // Free the mutex
         pthread_mutex_unlock( &(thpool->lock) );
