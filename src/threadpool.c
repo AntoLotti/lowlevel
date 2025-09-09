@@ -54,13 +54,13 @@ void threadpool_add_task( threadpool_t* dst, void* (*fun)( void* arg ), void* ar
     int nextTaskpos = (dst->queue_last + 1) % MAX_TASKS;
 
     // Check the length of the queue
-    if ( dst->numTasks < MAX_TASKS )
+    if ( dst->task_in_queue < MAX_TASKS )
     {   
         // Add the task to the queue 
-        dst->taskQueue[ nextTaskpos ].arg = arg;
-        dst->taskQueue[ nextTaskpos ].taskAction = fun;
+        dst->task_queue[ nextTaskpos ].arg = arg;
+        dst->task_queue[ nextTaskpos ].fn = fun;
         dst->queue_last = nextTaskpos;
-        dst->numTasks++;
+        dst->task_in_queue++;
 
         // Notified  all threads that there is a task in the queue
         pthread_cond_broadcast( &(dst->notify) ); 
