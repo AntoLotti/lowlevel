@@ -1,9 +1,10 @@
 //========INCLUDES========//
+#include <stdbool.h>
 #include "../inc/threadpool.h"
 
 
 //========FUN DEF=========//
-static bool creator_pthreads( threadPool_t* src )
+static bool creator_pthreads( threadpool_t* src )
 {
     for (int i = 0; i < MAX_THREADS; i++)
     {
@@ -17,7 +18,7 @@ static bool creator_pthreads( threadPool_t* src )
     return true;
 }
 
-static bool destructor_pthreads( threadPool_t* src )
+static bool destructor_pthreads( threadpool_t* src )
 {
     for (int i = 0; i < MAX_THREADS; i++)
     {
@@ -31,7 +32,7 @@ static bool destructor_pthreads( threadPool_t* src )
     return true;
 }
 
-void threadpool_init( threadPool_t* src )
+void threadpool_init( threadpool_t* src )
 {
     src->numTasks   = 0;        // Initialization of the index
     src->queue_top  = 0;        // Initialization of the index 
@@ -45,7 +46,7 @@ void threadpool_init( threadPool_t* src )
 
 }
 
-void threadpool_add_task( threadPool_t* dst, void* (*fun)( void* arg ), void* arg )
+void threadpool_add_task( threadpool_t* dst, void* (*fun)( void* arg ), void* arg )
 {
     pthread_mutex_lock( &(dst->lock) );
 
@@ -68,7 +69,7 @@ void threadpool_add_task( threadPool_t* dst, void* (*fun)( void* arg ), void* ar
     pthread_mutex_unlock( &(dst->lock) );
 }
 
-void threadpool_destroy( threadPool_t* src )
+void threadpool_destroy( threadpool_t* src )
 {
     pthread_mutex_lock( &(src->lock) );         // Make sure that only one thread access this function
     src->stop = true;                           // Ensured the condition
