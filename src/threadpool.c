@@ -1,5 +1,6 @@
 //========INCLUDES========//
 #include <stdbool.h>
+#include <errno.h>
 #include "../inc/threadpool.h"
 
 
@@ -8,7 +9,7 @@ static bool creator_pthreads( threadpool_t* src )
 {
     for (int i = 0; i < THREADS; i++)
     {
-        if ( pthread_create( &(src->threads[ i ]), NULL, &pthreadpool_assigner, src ) != 0  )
+        if ( pthread_create( &(src->threads[ i ]), NULL, &threadpool_assigner, src ) != 0  )
         {
             perror("Error creating the threads");
             return false;
