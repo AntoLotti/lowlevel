@@ -1,5 +1,5 @@
 //========INCLUDES========//
-#include <threadpool.h>
+#include "../inc/threadpool.h"
 
 
 //========FUN DEF=========//
@@ -67,7 +67,6 @@ void threadpool_add_task( threadPool_t* dst, void* (*fun)( void* arg ), void* ar
     
     pthread_mutex_unlock( &(dst->lock) );
 }
-
 
 void threadpool_destroy( threadPool_t* src )
 {
