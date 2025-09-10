@@ -131,16 +131,17 @@ void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
         pool->queued++;
 
         // Notified  all threads that there is a task in the queue
-        pthread_cond_broadcast( &(pool->notify) ); 
+        pthread_cond_signal(&(pool->notify) );
+        //pthread_cond_broadcast( &(pool->notify) ); 
     }
     
     pthread_mutex_unlock( &(pool->lock) );
 }
 
-/*void example_task(void* arg) 
+void example_task(void* arg) 
 {
     int* num = (int*)arg;
     printf("Processing task %d\n", *num);
     sleep(1);  // Simulate task work
     free(arg);
-}*/
+}

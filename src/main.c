@@ -3,20 +3,13 @@
 
 void threadpool_wait(threadpool_t* pool);
 
-void example_task(void* arg) 
-{
-    int* num = (int*)arg;
-    printf("Processing task %d\n", *num);
-    free(arg);
-    sleep(1);  // Simulate task work
-}
 
 int main() {
     threadpool_t pool;
     threadpool_init(&pool);
 
     // Add tasks to the thread pool
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 100; i++) {
         int* task_num = malloc(sizeof(int));
         *task_num = i;
         threadpool_add_task(&pool, example_task, task_num);
