@@ -1,5 +1,5 @@
 //========INCLUDES========//
-#include "threadpool.h"
+#include "../inc/threadpool.h"
 
 void* threadpool_function( void* src );
 //========FUN DEF=========//
