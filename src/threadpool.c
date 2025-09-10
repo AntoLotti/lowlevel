@@ -89,7 +89,7 @@ void* threadpool_function( void* src )
         }
         
         // Assigne a task 
-        task_t taskTh = thpool->task_queue[ thpool->queue_front ];
+        task_t task = thpool->task_queue[ thpool->queue_front ];
 
         // Move the task in the queue (Circular Queues)
         thpool->queue_front = (thpool->queue_front + 1) % QUEUE_SIZE;
@@ -99,9 +99,9 @@ void* threadpool_function( void* src )
         pthread_mutex_unlock( &(thpool->lock) );
 
         // Execute the task
-        if (taskTh.fn != NULL) 
+        if (task.fn != NULL) 
         {
-            (*(taskTh.fn))(taskTh.arg);
+            (*(task.fn))(task.arg);
         }
     }
     
@@ -137,3 +137,10 @@ void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
     pthread_mutex_unlock( &(pool->lock) );
 }
 
+/*void example_task(void* arg) 
+{
+    int* num = (int*)arg;
+    printf("Processing task %d\n", *num);
+    sleep(1);  // Simulate task work
+    free(arg);
+}*/
