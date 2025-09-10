@@ -1,13 +1,13 @@
 //========INCLUDES========//
 #include "threadpool.h"
 
-void* threadpool_assigner( void* src );
+void* threadpool_function( void* src );
 //========FUN DEF=========//
 static bool creator_pthreads( threadpool_t* src )
 {
     for (int i = 0; i < THREADS; i++)
     {
-        if ( pthread_create( &(src->threads[ i ]), NULL, &threadpool_assigner, src ) != 0  )
+        if ( pthread_create( &(src->threads[ i ]), NULL, threadpool_function, src ) != 0  )
         {
             perror("Error creating the threads");
             return false;
@@ -36,7 +36,7 @@ void threadpool_init( threadpool_t* src )
     src->queued   = 0;        // Initialization of the index
     src->queue_front  = 0;        // Initialization of the index 
     src->queue_back = 0;        // Initialization of the index
-    src->stop       = false;    // Initialization of the index 
+    src->stop       = 0;    // Initialization of the index 
 
     pthread_mutex_init( &(src->lock), NULL );   //Initialization of the mutex
     pthread_cond_init( &(src->notify), NULL );  //Initialization of the condition variable
@@ -48,7 +48,7 @@ void threadpool_init( threadpool_t* src )
 void threadpool_destroy( threadpool_t* src )
 {
     pthread_mutex_lock( &(src->lock) );         // Make sure that only one thread access this function
-    src->stop = true;                           // Ensured the condition
+    src->stop = 1;                           // Ensured the condition
     pthread_cond_broadcast( &(src->notify) );   // Ensure that all the threads get the notification
     pthread_mutex_unlock( &(src->lock) );       // Release the mutex
     
@@ -59,30 +59,7 @@ void threadpool_destroy( threadpool_t* src )
 
 }
 
-void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
-{
-    pthread_mutex_lock( &(pool->lock) );
-
-    // Find the next position where to put the task (Circular Queues)
-    int nextTaskpos = (pool->queue_back + 1) % QUEUE_SIZE;
-
-    // Check the length of the queue
-    if ( pool->queued < QUEUE_SIZE )
-    {   
-        // Add the task to the queue 
-        pool->task_queue[ nextTaskpos ].arg = arg;
-        pool->task_queue[ nextTaskpos ].fn = function;
-        pool->queue_back = nextTaskpos;
-        pool->queued++;
-
-        // Notified  all threads that there is a task in the queue
-        pthread_cond_broadcast( &(pool->notify) ); 
-    }
-    
-    pthread_mutex_unlock( &(pool->lock) );
-}
-
-void* threadpool_assigner( void* src )
+void* threadpool_function( void* src )
 {
     threadpool_t* thpool = (threadpool_t*)src ;
 
@@ -101,7 +78,7 @@ void* threadpool_assigner( void* src )
         if ( thpool->stop == true )
         {
             pthread_mutex_unlock( &(thpool->lock) );
-            pthread_exit( &(thpool->lock) );   
+            pthread_exit( NULL );   
             //return NULL;
         }
         
@@ -115,9 +92,42 @@ void* threadpool_assigner( void* src )
         // Free the mutex
         pthread_mutex_unlock( &(thpool->lock) );
 
-        // Ejecute the task
-        (*(taskTh.fn))( taskTh.arg );
+        // Execute the task
+        if (taskTh.fn != NULL) 
+        {
+            (*(taskTh.fn))(taskTh.arg);
+        }
     }
     
     return NULL;
 }
+
+void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
+{
+    pthread_mutex_lock( &(pool->lock) );
+
+    if (pool->queued >= QUEUE_SIZE) {
+        // Handle queue full situation
+        fprintf(stderr, "Queue is full, dropping task\n");
+        pthread_mutex_unlock(&(pool->lock));
+        return;
+    }
+
+    // Check the length of the queue
+    if ( pool->queued < QUEUE_SIZE )
+    {   
+        // Add the task to the queue 
+        pool->task_queue[ pool->queued ].arg = arg;
+        pool->task_queue[ pool->queued ].fn = function;
+
+        // Find the next position where to put the task (Circular Queues)
+        pool->queue_back = (pool->queue_back + 1) % QUEUE_SIZE;
+        pool->queued++;
+
+        // Notified  all threads that there is a task in the queue
+        pthread_cond_broadcast( &(pool->notify) ); 
+    }
+    
+    pthread_mutex_unlock( &(pool->lock) );
+}
+

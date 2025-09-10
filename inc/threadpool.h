@@ -1,12 +1,12 @@
-
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 
+#include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <unistd.h>
-#include <pthread.h>
 
 #define THREADS 16
 #define QUEUE_SIZE 100
@@ -34,6 +34,7 @@ typedef struct
 void threadpool_init(threadpool_t* pool);
 void threadpool_destroy(threadpool_t* pool);
 void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg);
+void* threadpool_function( void* src );
 void example_task(void* arg);
 
 #endif // THREADPOOL_H 

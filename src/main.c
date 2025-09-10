@@ -1,24 +1,41 @@
 #include <stdio.h>
 #include "threadpool.h"
 
-threadpool_t threadpool;
+void threadpool_wait(threadpool_t* pool);
 
-static void threads_print( void* src ) 
+void example_task(void* arg) 
 {
-    (void)src;
-    printf("\n Thread printed \n");
-    sleep(100);
-    //return NULL;
+    int* num = (int*)arg;
+    printf("Processing task %d\n", *num);
+    free(arg);
+    sleep(1);  // Simulate task work
 }
 
-int main(void)
-{
-    threadpool_init(&threadpool);
+int main() {
+    threadpool_t pool;
+    threadpool_init(&pool);
 
-    threadpool_add_task( &threadpool, threads_print, NULL );
+    // Add tasks to the thread pool
+    for (int i = 0; i < 15; i++) {
+        int* task_num = malloc(sizeof(int));
+        *task_num = i;
+        threadpool_add_task(&pool, example_task, task_num);
+    }
 
-    sleep(3);
-    threadpool_destroy(&threadpool);
+    // Let tasks complete
+    threadpool_wait(&pool);
+    threadpool_destroy(&pool);
 
     return 0;
+}
+
+void threadpool_wait(threadpool_t* pool) 
+{
+    pthread_mutex_lock(&(pool->lock));
+    while (pool->queued > 0) {
+        pthread_mutex_unlock(&(pool->lock));
+        usleep(10000);  // Sleep for 10ms
+        pthread_mutex_lock(&(pool->lock));
+    }
+    pthread_mutex_unlock(&(pool->lock));
 }
