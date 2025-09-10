@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../inc/threadpool.h"
+#include "threadpool.h"
 
 threadpool_t threadpool;
 
@@ -7,6 +7,7 @@ static void threads_print( void* src )
 {
     (void)src;
     printf("\n Thread printed \n");
+    sleep(100);
     //return NULL;
 }
 
@@ -16,6 +17,7 @@ int main(void)
 
     threadpool_add_task( &threadpool, threads_print, NULL );
 
+    sleep(3);
     threadpool_destroy(&threadpool);
 
     return 0;

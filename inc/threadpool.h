@@ -2,6 +2,10 @@
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 
+#include <stdio.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #define THREADS 16

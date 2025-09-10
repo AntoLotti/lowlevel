@@ -1,9 +1,7 @@
 //========INCLUDES========//
-#include <stdbool.h>
-#include <errno.h>
-#include "../inc/threadpool.h"
+#include "threadpool.h"
 
-
+void* threadpool_assigner( void* src );
 //========FUN DEF=========//
 static bool creator_pthreads( threadpool_t* src )
 {
@@ -47,29 +45,6 @@ void threadpool_init( threadpool_t* src )
 
 }
 
-void threadpool_add_task( threadpool_t* dst, void* (*fun)( void* arg ), void* arg )
-{
-    pthread_mutex_lock( &(dst->lock) );
-
-    // Find the next position where to put the task (Circular Queues)
-    int nextTaskpos = (dst->queue_back + 1) % MAX_TASKS;
-
-    // Check the length of the queue
-    if ( dst->queued < MAX_TASKS )
-    {   
-        // Add the task to the queue 
-        dst->task_queue[ nextTaskpos ].arg = arg;
-        dst->task_queue[ nextTaskpos ].fn = fun;
-        dst->queue_back = nextTaskpos;
-        dst->queued++;
-
-        // Notified  all threads that there is a task in the queue
-        pthread_cond_broadcast( &(dst->notify) ); 
-    }
-    
-    pthread_mutex_unlock( &(dst->lock) );
-}
-
 void threadpool_destroy( threadpool_t* src )
 {
     pthread_mutex_lock( &(src->lock) );         // Make sure that only one thread access this function
@@ -84,9 +59,32 @@ void threadpool_destroy( threadpool_t* src )
 
 }
 
+void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
+{
+    pthread_mutex_lock( &(pool->lock) );
+
+    // Find the next position where to put the task (Circular Queues)
+    int nextTaskpos = (pool->queue_back + 1) % QUEUE_SIZE;
+
+    // Check the length of the queue
+    if ( pool->queued < QUEUE_SIZE )
+    {   
+        // Add the task to the queue 
+        pool->task_queue[ nextTaskpos ].arg = arg;
+        pool->task_queue[ nextTaskpos ].fn = function;
+        pool->queue_back = nextTaskpos;
+        pool->queued++;
+
+        // Notified  all threads that there is a task in the queue
+        pthread_cond_broadcast( &(pool->notify) ); 
+    }
+    
+    pthread_mutex_unlock( &(pool->lock) );
+}
+
 void* threadpool_assigner( void* src )
 {
-    threadPool_t* thpool = (threadPool_t*)src ;
+    threadpool_t* thpool = (threadpool_t*)src ;
 
     while ( 1 )
     {
@@ -108,17 +106,17 @@ void* threadpool_assigner( void* src )
         }
         
         // Assigne a task 
-        task_t taskTh = thpool->taskQueue[ thpool->queue_front ];
+        task_t taskTh = thpool->task_queue[ thpool->queue_front ];
 
         // Move the task in the queue (Circular Queues)
-        thpool->queue_front = (thpool->queue_front + 1) % MAX_TASKS;
+        thpool->queue_front = (thpool->queue_front + 1) % QUEUE_SIZE;
         thpool->queued--;
 
         // Free the mutex
         pthread_mutex_unlock( &(thpool->lock) );
 
         // Ejecute the task
-        (*(taskTh.taskAction))( taskTh.arg );
+        (*(taskTh.fn))( taskTh.arg );
     }
     
     return NULL;
