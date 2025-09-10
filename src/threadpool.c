@@ -1,7 +1,6 @@
 //========INCLUDES========//
 #include "../inc/threadpool.h"
 
-void* threadpool_function( void* src );
 //========FUN DEF=========//
 static bool creator_pthreads( threadpool_t* src )
 {
@@ -37,6 +36,13 @@ void threadpool_init( threadpool_t* src )
     src->queue_front  = 0;        // Initialization of the index 
     src->queue_back = 0;        // Initialization of the index
     src->stop       = 0;    // Initialization of the index 
+
+    // Initialize task queue to zeros
+    for (int i = 0; i < QUEUE_SIZE; i++) 
+    {
+        src->task_queue[i].fn = NULL;
+        src->task_queue[i].arg = NULL;
+    }
 
     pthread_mutex_init( &(src->lock), NULL );   //Initialization of the mutex
     pthread_cond_init( &(src->notify), NULL );  //Initialization of the condition variable
