@@ -16,7 +16,7 @@ int main() {
     }
 
     // Let tasks complete
-    threadpool_wait(&pool);
+    sleep(5);
     threadpool_destroy(&pool);
 
     return 0;
@@ -25,7 +25,8 @@ int main() {
 void threadpool_wait(threadpool_t* pool) 
 {
     pthread_mutex_lock(&(pool->lock));
-    while (pool->queued > 0) {
+    while (pool->queued > 0) 
+    {
         pthread_mutex_unlock(&(pool->lock));
         usleep(10000);  // Sleep for 10ms
         pthread_mutex_lock(&(pool->lock));

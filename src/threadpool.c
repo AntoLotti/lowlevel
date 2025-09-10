@@ -54,6 +54,12 @@ void threadpool_init( threadpool_t* src )
 void threadpool_destroy( threadpool_t* src )
 {
     pthread_mutex_lock( &(src->lock) );         // Make sure that only one thread access this function
+    while (src->queued > 0) 
+    {
+        pthread_mutex_unlock(&(src->lock));
+        usleep(10000);  // Sleep for 10ms
+        pthread_mutex_lock(&(src->lock));
+    }
     src->stop = 1;                           // Ensured the condition
     pthread_cond_broadcast( &(src->notify) );   // Ensure that all the threads get the notification
     pthread_mutex_unlock( &(src->lock) );       // Release the mutex
