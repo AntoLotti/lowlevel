@@ -30,6 +30,10 @@ static bool destructor_pthreads(threadpool_t* src)
 
 void threadpool_init(threadpool_t* src)
 {
+    if(src == NULL)
+    {
+        return -1;
+    } 
     src->queued = 0;
     src->queue_front = 0;
     src->queue_back = 0;
@@ -125,12 +129,13 @@ void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
         pthread_mutex_unlock(&(pool->lock));
         return;
     }
-
-    // Wait until there's space in the queue or pool is stopping
-    while (pool->queued >= QUEUE_SIZE && !pool->stop) {
-        pthread_cond_wait(&(pool->not_full), &(pool->lock));
+   
+    if (pool->queued >= QUEUE_SIZE) {
+        fprintf(stderr, "Queue is full, dropping task\n");
+        pthread_mutex_unlock(&(pool->lock));
+        return;
     }
-    
+
     if (pool->stop) {
         fprintf(stderr, "Threadpool is stopping, cannot add task\n");
         pthread_mutex_unlock(&(pool->lock));
