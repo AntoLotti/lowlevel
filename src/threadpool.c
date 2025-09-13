@@ -49,7 +49,11 @@ void threadpool_init( threadpool_t* src )
     pthread_mutex_init( &(src->lock), NULL );   //Initialization of the mutex
     pthread_cond_init( &(src->notify), NULL );  //Initialization of the condition variable
 
-    creator_pthreads( src );   //Creation of the threads
+     if (!creator_pthreads(src))
+    {
+        fprintf(stderr, "Failed to create threads\n");
+        exit(EXIT_FAILURE);
+    }
 
 }
 
