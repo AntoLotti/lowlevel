@@ -116,7 +116,7 @@ void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg)
         return;
     }
 
-    if (pool->queued >= QUEUE_SIZE)
+    if (pool->queued == QUEUE_SIZE)
     {
         fprintf(stderr, "Queue is full, dropping task\n");
         pthread_mutex_unlock(&(pool->lock));
