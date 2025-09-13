@@ -4,6 +4,7 @@
 //========FUN DEF=========//
 static bool creator_pthreads( threadpool_t* src )
 {
+	pthread_mutex_lock( &(src->lock) );
     for (int i = 0; i < THREADS; i++)
     {
         if ( pthread_create( &(src->threads[ i ]), NULL, threadpool_function, src ) != 0  )
@@ -13,6 +14,7 @@ static bool creator_pthreads( threadpool_t* src )
         }
     }
 
+	pthread_mutex_unlock( &(src->lock) );
     return true;
 }
 
