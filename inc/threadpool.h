@@ -21,20 +21,20 @@ typedef struct
 {
     pthread_mutex_t lock;
     pthread_cond_t notify;
-    pthread_cond_t not_full;  // Added condition variable for queue not full
+    pthread_cond_t not_full;
     pthread_t threads[THREADS];
     task_t task_queue[QUEUE_SIZE];
     int queued;
     int queue_front;
     int queue_back;
     bool stop;
-    bool destroyed;  // Added flag to track if pool is destroyed
+    bool shutdown_immediate;
 } threadpool_t;
 
 // Function declarations
-void threadpool_init(threadpool_t* pool);
-void threadpool_destroy(threadpool_t* pool);
-void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg);
+int threadpool_init(threadpool_t* pool);
+int threadpool_destroy(threadpool_t* pool, bool immediate);
+int threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg);
 void* threadpool_function(void* src);
 void example_task(void* arg);
 
