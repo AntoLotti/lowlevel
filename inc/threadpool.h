@@ -21,13 +21,14 @@ typedef struct
 {
     pthread_mutex_t lock;
     pthread_cond_t notify;
+    pthread_cond_t not_full;  // Added condition variable for queue not full
     pthread_t threads[THREADS];
     task_t task_queue[QUEUE_SIZE];
     int queued;
     int queue_front;
     int queue_back;
     bool stop;
-    int active_threads;
+    bool destroyed;  // Added flag to track if pool is destroyed
 } threadpool_t;
 
 // Function declarations
