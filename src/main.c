@@ -3,7 +3,6 @@
 
 void threadpool_wait(threadpool_t* pool);
 
-
 int main() {
     threadpool_t pool;
     threadpool_init(&pool);
@@ -15,21 +14,28 @@ int main() {
         threadpool_add_task(&pool, example_task, task_num);
     }
 
-    // Let tasks complete
-    sleep(5);
+    // Wait for tasks to complete
+    //threadpool_wait(&pool);
+    sleep(1);
     threadpool_destroy(&pool);
 
     return 0;
 }
 
-void threadpool_wait(threadpool_t* pool) 
+/*
+void threadpool_wait(threadpool_t* pool)
 {
-    pthread_mutex_lock(&(pool->lock));
-    while (pool->queued > 0) 
+    // Wait until all tasks are completed and all threads are idle
+    while (1)
     {
-        pthread_mutex_unlock(&(pool->lock));
-        usleep(10000);  // Sleep for 10ms
         pthread_mutex_lock(&(pool->lock));
+        int queued = pool->queued;
+        int active = pool->active_threads;
+        pthread_mutex_unlock(&(pool->lock));
+        
+        if (queued == 0 && active == 0) break;
+        
+        usleep(10000);  // Sleep for 10ms
     }
-    pthread_mutex_unlock(&(pool->lock));
 }
+*/

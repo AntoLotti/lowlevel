@@ -17,7 +17,6 @@ typedef struct
     void* arg;
 } task_t;
 
-
 typedef struct
 {
     pthread_mutex_t lock;
@@ -27,14 +26,15 @@ typedef struct
     int queued;
     int queue_front;
     int queue_back;
-    int stop;
-}threadpool_t;
+    bool stop;
+    int active_threads;
+} threadpool_t;
 
 // Function declarations
 void threadpool_init(threadpool_t* pool);
 void threadpool_destroy(threadpool_t* pool);
 void threadpool_add_task(threadpool_t* pool, void (*function)(void*), void* arg);
-void* threadpool_function( void* src );
+void* threadpool_function(void* src);
 void example_task(void* arg);
 
-#endif // THREADPOOL_H 
+#endif // THREADPOOL_H
